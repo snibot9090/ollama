@@ -68,8 +68,8 @@ ARG OLLAMA_SKIP_ROCM_GENERATE
 ARG OLLAMA_FAST_BUILD
 ARG VERSION
 ARG CUSTOM_CPU_FLAGS
-RUN --mount=type=cache,target=/root/.ccache \
-    if grep "^flags" /proc/cpuinfo|grep avx>/dev/null; then \
+RUN --mount=type=cache,id=ccache,target=/root/.ccache \
+    if grep "^flags" /proc/cpuinfo | grep avx > /dev/null; then \
         make -j $(nproc) dist ; \
     else \
         make -j 5 dist ; \
@@ -94,7 +94,7 @@ COPY . .
 ARG CGO_CFLAGS
 ENV GOARCH arm64
 ARG VERSION
-RUN --mount=type=cache,target=/root/.ccache \
+RUN --mount=type=cache,id=ccache,target=/root/.ccache \
     make -j 5 dist_cuda_v11 \
         CUDA_ARCHITECTURES="72;87" \
         GPU_RUNNER_VARIANT=_jetpack5 \
@@ -113,7 +113,7 @@ COPY . .
 ARG CGO_CFLAGS
 ENV GOARCH arm64
 ARG VERSION
-RUN --mount=type=cache,target=/root/.ccache \
+RUN --mount=type=cache,id=ccache,target=/root/.ccache \
     make -j 5 dist_cuda_v12 \
         CUDA_ARCHITECTURES="87" \
         GPU_RUNNER_VARIANT=_jetpack6 \
@@ -125,7 +125,7 @@ COPY . .
 ARG OLLAMA_SKIP_CUDA_GENERATE
 ARG OLLAMA_FAST_BUILD
 ARG VERSION
-RUN --mount=type=cache,target=/root/.ccache \
+RUN --mount=type=cache,id=ccache,target=/root/.ccache \
     make -j 5 dist
 COPY --from=runners-jetpack5-arm64 /go/src/github.com/ollama/ollama/dist/ dist/
 COPY --from=runners-jetpack6-arm64 /go/src/github.com/ollama/ollama/dist/ dist/
@@ -141,7 +141,6 @@ COPY --from=build-amd64 /go/src/github.com/ollama/ollama/dist/ollama-linux-*.tgz
 FROM --platform=linux/arm64 scratch AS dist-arm64
 COPY --from=build-arm64 /go/src/github.com/ollama/ollama/dist/ollama-linux-*.tgz /
 FROM dist-$TARGETARCH AS dist
-
 
 # For amd64 container images, filter out cuda/rocm to minimize size
 FROM build-amd64 AS runners-cuda-amd64
@@ -170,7 +169,6 @@ COPY --from=build-arm64 /go/src/github.com/ollama/ollama/dist/linux-arm64/bin/ /
 COPY --from=build-arm64 /go/src/github.com/ollama/ollama/dist/linux-arm64/lib/ /lib/
 COPY --from=runners-jetpack5-arm64 /go/src/github.com/ollama/ollama/dist/linux-arm64-jetpack5/lib/ /lib/
 COPY --from=runners-jetpack6-arm64 /go/src/github.com/ollama/ollama/dist/linux-arm64-jetpack6/lib/ /lib/
-
 
 # ROCm libraries larger so we keep it distinct from the CPU/CUDA image
 FROM --platform=linux/amd64 ubuntu:22.04 AS runtime-rocm
