@@ -68,7 +68,7 @@ ARG OLLAMA_SKIP_ROCM_GENERATE
 ARG OLLAMA_FAST_BUILD
 ARG VERSION
 ARG CUSTOM_CPU_FLAGS
-RUN --mount=type=cache,id=cache-ccache,target=/root/.ccache \
+RUN --mount=type=cache,id=cache:ccache,target=/root/.ccache \
     if grep "^flags" /proc/cpuinfo | grep avx > /dev/null; then \
         make -j $(nproc) dist ; \
     else \
@@ -94,7 +94,7 @@ COPY . .
 ARG CGO_CFLAGS
 ENV GOARCH arm64
 ARG VERSION
-RUN --mount=type=cache,id=cache-ccache,target=/root/.ccache \
+RUN --mount=type=cache,id=cache:ccache,target=/root/.ccache \
     make -j 5 dist_cuda_v11 \
         CUDA_ARCHITECTURES="72;87" \
         GPU_RUNNER_VARIANT=_jetpack5 \
@@ -113,7 +113,7 @@ COPY . .
 ARG CGO_CFLAGS
 ENV GOARCH arm64
 ARG VERSION
-RUN --mount=type=cache,id=cache-ccache,target=/root/.ccache \
+RUN --mount=type=cache,id=cache:ccache,target=/root/.ccache \
     make -j 5 dist_cuda_v12 \
         CUDA_ARCHITECTURES="87" \
         GPU_RUNNER_VARIANT=_jetpack6 \
@@ -125,7 +125,7 @@ COPY . .
 ARG OLLAMA_SKIP_CUDA_GENERATE
 ARG OLLAMA_FAST_BUILD
 ARG VERSION
-RUN --mount=type=cache,id=cache-ccache,target=/root/.ccache \
+RUN --mount=type=cache,id=cache:ccache,target=/root/.ccache \
     make -j 5 dist
 COPY --from=runners-jetpack5-arm64 /go/src/github.com/ollama/ollama/dist/ dist/
 COPY --from=runners-jetpack6-arm64 /go/src/github.com/ollama/ollama/dist/ dist/
